@@ -249,7 +249,7 @@ ga('send', 'pageview');
                 <script type="text/javascript">
                 $( document ).ready(function() {
                     (function getSalesStats() {
-                        $.getJSON( "eos-sales-statistic.php" ).always(function (data) {
+                        $.getJSON( "https://eos.io/eos-sales-statistic.php" ).always(function (data) {
                             if(data && typeof data === "object") {
                                 try {
                                     var firstSaleWindow = data.find(x => x.id === 0);
