@@ -12,7 +12,31 @@
     <script src="./moment.min.js" type="text/javascript"></script>
     <!--custom stylesheet -->
     <link rel="stylesheet" href="./main.css">
-</head>
+	<style>
+#outerdiv
+{
+width:600px;
+height:450px;
+overflow:hidden;
+position:relative;
+
+}
+
+#inneriframe
+{
+position:absolute;
+top:-150px;
+left:-500px;
+width:1280px;
+height:1200px;
+visibility:hidden;
+}
+
+</style>
+
+	
+	
+	</head>
 
 <body>
   <script>
@@ -183,7 +207,12 @@ ga('send', 'pageview');
                                                             </div>
                         </div>
                         <div class="col-8">
-                            <div class="token-sale-count">
+
+<div id='outerdiv'>
+<iframe src="https://eos.io#token-sale" id='inneriframe' scrolling=no></iframe>
+</div>
+		
+							<!--<div class="token-sale-count">
                                 <h2>EOS Token Distribution</h2>
                                 <div class="distributed-progress">
                                     <div class="title">Total
@@ -218,7 +247,8 @@ ga('send', 'pageview');
                                         <i class="alert-icon"></i>Depending on the Ethereum network traffic, figures may be delayed.
                                     </div>
                                 </div>
-                            </div>
+							</div>-->
+							
                         </div>
                     </div>
                     <hr>
@@ -977,6 +1007,16 @@ ga('send', 'pageview');
     </div>
 
 </div>
+
+<script>
+
+
+  setTimeout(function() {        document.getElementById('inneriframe').style.visibility = 'visible'; }, 
+2000)
+
+    
+
+</script>
 
 
 
