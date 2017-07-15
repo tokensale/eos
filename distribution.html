@@ -1,0 +1,1207 @@
+﻿<!DOCTYPE html>
+<!-- saved from url=(0028)https://eos.io/distribution/ -->
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>EOS Token Distribution</title>
+    <link rel="stylesheet" href="index.css">
+    <script src="./nr-1039.min.js"></script>
+    <script src="./async.min.js"></script>
+    <script src="moment.min.js"></script>
+    <script src="react.min.js"></script>
+    <script src="react-dom.min.js"></script>
+    <script src="babel.min.js"></script>
+    <script src="ecc.js"></script>
+    <script src="eos_sale_abi.js"></script>
+    <script src="eos_token_abi.js"></script>
+    <script src="eos_sale_util_abi.js"></script>
+    <script src="lib.js"></script>
+    <script src="jquery.min.js" type="text/javascript"></script>
+    <script src="jquery.validate.min.js" type="text/javascript"></script>
+    <script src="jquery.countdown.min.js" type="text/javascript"></script>
+    <script src="moment-timezone-with-data.min.js" type="text/javascript"></script>
+    <script src="monitoring.js" type="text/javascript"></script>
+    <script type="text/jsx" src="index.js">
+    </script>
+    <script>
+
+"use strict";
+        var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+var eos_sale_address_main = "0xd0a6e6c54dbc68db5db3a091b171a77407ff7ccf";
+var eos_token_address_main = "0x86fa049857e0209aa7d9e616f7eb3b3b78ecfdb0";
+var eos_sale_util_address_main = "0x860fd485f533b0348e413e65151f7ee993f93c02";
+
+        var eos_sale, eos_token, eos_sale_util;
+
+        var state;
+
+        var WAD = 1000000000000000000;
+
+        // Wrapper for finally. When there is an error: show error
+        // else execute
+        var hopefully = function hopefully($) {
+            return function (error, result) {
+                if (error) {
+                    lament(error);
+                } else {
+                    $(result);
+                }
+            };
+        };
+
+        // Displays error message at end of page
+        function lament(error) {
+            if (error) {
+                document.querySelector(".before-error").outerHTML += "\n      <div class=\"error pane\">\n        <h3>" + error.message + "</h3>\n        <pre>" + error.stack + "</pre>\n      </div>\n    ";
+            }
+        }
+
+        // Switches between different information windows
+        function showPane(name) {
+            hidePanes();
+            show(name + "-pane");
+            disable(name + "-link");
+        }
+
+        // Hides all information windows
+        function hidePanes() {
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+                for (var _iterator = "generate transfer buy register".split(" ")[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                    var x = _step.value;
+
+                    try {
+                        enable(x + "-link");
+                        hide(x + "-pane");
+                    } catch (error) { }
+                }
+            } catch (err) {
+                _didIteratorError = true;
+                _iteratorError = err;
+            } finally {
+                try {
+                    if (!_iteratorNormalCompletion && _iterator.return) {
+                        _iterator.return();
+                    }
+                } finally {
+                    if (_didIteratorError) {
+                        throw _iteratorError;
+                    }
+                }
+            }
+        }
+
+        // Enables a button
+        function enable(id) {
+            byId(id).classList.remove("disabled");
+            byId(id).parentNode.classList.remove("disabled");
+        }
+
+        // Disables a button
+        function disable(id) {
+            byId(id).classList.add("disabled");
+            byId(id).parentNode.classList.add("disabled");
+        }
+
+        // Inital loading of the page
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                if (!window.web3) {
+                    byId("app").innerHTML = "\n      <div>\n        <div class=\"pane before-error\">\n          <h2>Could not connect to Ethereum</h2>\n          <p>\n\n            Consider installing <a href=https://metamask.io>MetaMask</a>,\n            <a href=#>Mist</a> or another Ethereum client.\n\n            If you&rsquo;re using MetaMask, you may need to unlock\n            your account. You can also try disabling and re-enabling\n            the MetaMask plugin by going to <a\n            href=chrome://extensions>chrome://extensions</a>.\n\n          </p>\n\n          <p>Please reload this page and try again.</p>\n        </div>\n      </div>\n    ";
+                } else {
+                    eos_sale = web3.eth.contract(eos_sale_abi).at(eos_sale_address_main);                    
+
+                    eos_token = web3.eth.contract(eos_token_abi).at(eos_token_address_main);
+                    eos_sale_util = web3.eth.contract(eos_sale_util_abi).at(eos_sale_util_address_main
+
+                        // web3.eth.getBlock(0, hopefully(block => {
+                        //if (block.hash == chain.genesis) {
+                    ); poll
+                        //} else {
+                        //  lament(new Error(`Wrong blockchain; please use ${chain.name}`))
+                        //}
+                        // }))
+                        ();
+                }
+            }, 500);
+        });
+
+        var getCommonStatisticWithCallback = function getCommonStatisticWithCallback($) {
+            // Fetch common statistic from our server
+            fetch('https://api.eos.io/eos-sales-statistic').then(function (result) {
+                return result.json();
+            }).then(function (commonStatistic) {
+                $(null, commonStatistic);
+            }).catch(function (error) {
+                $(error);
+            });
+        };
+
+        // Refresh the page
+        function refresh() {
+            return new Promise(function (resolve, reject) {
+                async.parallel(Object.assign({
+                    // get Current Window Info
+                    commonStatistic: function commonStatistic($) {
+                        return getCommonStatisticWithCallback($);
+                    }
+                }, web3.eth.accounts[0] ? {
+                    // Get User Data
+                        eth_balance: function eth_balance($) {
+                            alert('eth_balance');
+                        return web3.eth.getBalance(web3.eth.accounts[0], $);
+                    },
+                        eos_balance: function eos_balance($) {
+                            alert('eos_balance');
+                        return eos_token.balanceOf(web3.eth.accounts[0], $);
+                    },
+                        publicKey: function publicKey($) {
+                            alert('publicKey');
+                        return eos_sale.keys(web3.eth.accounts[0], $);
+                    },
+                        userBuys: function userBuys($) {
+                            alert('userBuys');
+                        return eos_sale_util.userBuys(web3.eth.accounts[0], $);
+                    },
+                    userClaims: function userClaims($) {
+                        return eos_sale_util.userClaims(web3.eth.accounts[0], $);
+                    }
+                } : {}), hopefully(function (_ref) {
+                    var commonStatistic = _ref.commonStatistic,
+                        eth_balance = _ref.eth_balance,
+                        eos_balance = _ref.eos_balance,
+                        publicKey = _ref.publicKey,
+                        userBuys = _ref.userBuys,
+                        userClaims = _ref.userClaims;
+
+
+                    // Convert it to big number temporarily to ensure compability with old code
+                    var today = web3.toBigNumber(commonStatistic[0]["today"]
+                        // Convert it to big number temporarily to ensure compability with old code
+                    ); var numberOfDays = web3.toBigNumber(commonStatistic[0]["numberOfDays"]
+
+                        // Entropy for generating the EOS key.  The key could be added or changed.
+                    ); byId("app").addEventListener("mousemove", entropyEvent, { capture: false, passive: true });
+
+                    if (keyChange(publicKey)) {
+                        // The key was just changed
+                        if (byId("generate-link")) {
+                            enable("generate-link");
+                        }
+                        if (byId("register-pane")) {
+                            hide("register-pane");
+                        }
+                    }
+
+                    async.map(iota(Number(numberOfDays) + 1), function (i, $) {
+                        var day = { id: i };
+                        day.name = day.id;
+                        // Convert it to big number temporarily to ensure compability with old code
+                        day.createOnDay = web3.toBigNumber(commonStatistic[i]["createOnDay"]
+                            // Convert it to big number temporarily to ensure compability with old code
+                        ); day.dailyTotal = web3.toBigNumber(commonStatistic[i]["dailyTotal"]
+                            // Convert it to big number temporarily to ensure compability with old code
+                        ); day.price = web3.toBigNumber(commonStatistic[i]["price"]);
+                        day.userBuys = userBuys[i] && userBuys[i].div(WAD);
+                        day.received = day.dailyTotal.equals(0) ? web3.toBigNumber(0) : day.createOnDay.div(day.dailyTotal).times(day.userBuys);
+
+                        if (day.id == 0) {
+                            day.ends = moment(commonStatistic[i]["ends"]);
+                        } else {
+                            day.begins = moment(commonStatistic[i]["begins"]);
+                            day.ends = moment(commonStatistic[i]["ends"]);
+                        }
+
+                        // Used for determining total unclaimed tokens. Marks windows where unclaimed tokens persist
+                        day.claimed = userClaims && userClaims[i];
+                        $(null, day);
+                    }, hopefully(function (days) {
+
+                        // Adds up all unclaimed tokens from the above marked windows
+                        var unclaimed = days.filter(function (x, i) {
+                            return i < Number(today) && !x.claimed;
+                        }).reduce(function (a, x) {
+                            return x.received.plus(a);
+                        }, web3.toBigNumber(0));
+
+                        resolve(update(_extends({
+                            days: days, unclaimed: unclaimed, today: today, eth_balance: eth_balance, eos_balance: eos_balance, publicKey: publicKey
+                        }, state ? {} : { buyWindow: today.toNumber() })));
+                    }));
+                }));
+            });
+        }
+
+        // Hardcoded Dropdow in the Get EOS Panel that shows windows from current Window till the end
+        var renderBuyWindowDropDown = function renderBuyWindowDropDown(buyWindow, today) {
+            var dropdownOptions = [];
+
+            for (var i = Number(today); i < 351; i++) {
+                var dropdownOption = React.createElement(
+                    "option",
+                    { key: i, value: i },
+                    "Period #",
+                    i
+                );
+                dropdownOptions.push(dropdownOption);
+            }
+
+            return React.createElement(
+                "select",
+                {
+                    id: "sale-window", value: buyWindow,
+                    onChange: function onChange(e) {
+                        return update({ buyWindow: e.target.value });
+                    }
+                },
+                dropdownOptions
+            );
+        };
+
+        var render = function render(_ref2) {
+            var time = _ref2.time,
+                days = _ref2.days,
+                unclaimed = _ref2.unclaimed,
+                today = _ref2.today,
+                eth_balance = _ref2.eth_balance,
+                eos_balance = _ref2.eos_balance,
+                publicKey = _ref2.publicKey,
+                buyWindow = _ref2.buyWindow;
+            return React.createElement(
+                "div",
+                null,
+                // ---------------------------------------------------
+                // Top Panel
+                // ---------------------------------------------------
+                web3.eth.accounts[0] ? React.createElement(
+                    "div",
+                    null,
+                    React.createElement(
+                        "div",
+                        { className: "account pane" },
+                        React.createElement(
+                            "h2",
+                            { style: { textAlign: "center" } },
+                            "EOS Token Distribution"
+                        ),
+                        React.createElement(
+                            "div",
+                            { className: "info" },
+                            React.createElement(
+                                "table",
+                                null,
+                                React.createElement(
+                                    "tbody",
+                                    null,
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Contract address"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            eos_sale_address_main
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Ethereum account"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { width: "50rem", textAlign: "left" } },
+                                            web3.eth.accounts[0]
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "EOS public key"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            publicKey ? React.createElement(
+                                                "span",
+                                                null,
+                                                React.createElement(
+                                                    "code",
+                                                    null,
+                                                    publicKey
+                                                )
+                                            ) : React.createElement(
+                                                "span",
+                                                null,
+                                                "(no EOS key registered)"
+                                            )
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Token balances"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            formatETH(eth_balance.div(WAD)),
+                                            " ETH"
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement("th", null),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            formatEOS(unclaimed),
+                                            " EOS (unclaimed)"
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement("th", null),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            formatEOS(eos_balance.div(WAD)),
+                                            " EOS"
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            "div",
+                            { className: "buttons" },
+                            React.createElement(
+                                "div",
+                                { className: "row", style: { marginBottom: "1rem" } },
+                                React.createElement(
+                                    "div",
+                                    { className: "button" },
+                                    React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "buy-link",
+                                            onClick: function onClick(event) {
+                                                return event.preventDefault(), showPane('buy');
+                                            }
+                                        },
+                                        "Get EOS tokens"
+                                    )
+                                ),
+                                React.createElement(
+                                    "div",
+                                    { className: "button", style: { marginLeft: "1rem" } },
+                                    React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "generate-link",
+                                            onClick: function onClick(event) {
+                                                return generate(), event.preventDefault();
+                                            }
+                                        },
+                                        publicKey ? "Change your EOS key" : "Generate EOS key"
+                                    )
+                                )
+                            ),
+                            React.createElement(
+                                "div",
+                                { className: "row" },
+                                React.createElement(
+                                    "div",
+                                    { className: "button" },
+                                    React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "transfer-link",
+                                            onClick: function onClick(event) {
+                                                return event.preventDefault(), showPane('transfer');
+                                            }
+                                        },
+                                        "Transfer EOS tokens"
+                                    )
+                                ),
+                                React.createElement(
+                                    "div",
+                                    {
+                                        className: "button " + (unclaimed.equals(0) ? 'disabled' : ''),
+                                        style: { marginLeft: "1rem" }
+                                    },
+                                    unclaimed.equals(0) && React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "claim-button", className: "disabled",
+                                            onClick: function onClick(event) {
+                                                return event.preventDefault();
+                                            }
+                                        },
+                                        "Claim EOS tokens"
+                                    ),
+                                    !unclaimed.equals(0) && React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "claim-button",
+                                            onClick: function onClick(event) {
+                                                return event.preventDefault(), claim();
+                                            }
+                                        },
+                                        "Claim EOS tokens"
+                                    ),
+                                    React.createElement(
+                                        "a",
+                                        {
+                                            href: "#", id: "claim-progress", className: "disabled hidden",
+                                            onClick: function onClick(event) {
+                                                return event.preventDefault();
+                                            }
+                                        },
+                                        "Claiming tokens..."
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    React.createElement(
+                        "form",
+                        {
+                            className: "hidden pane", id: "generate-pane",
+                            onSubmit: function onSubmit(event) {
+                                return event.preventDefault(), generateConfirm();
+                            }
+                        },
+                        React.createElement(
+                            "span",
+                            { id: "generate-progress" },
+                            "Generating key..."
+                        ),
+                        React.createElement(
+                            "div",
+                            { id: "generate-confirm", className: "hidden" },
+                            React.createElement(
+                                "h3",
+                                null,
+                                publicKey ? "Change" : "Register",
+                                " EOS key"
+                            ),
+                            publicKey ? React.createElement(
+                                "p",
+                                null,
+                                "This will replace your EOS claim key:",
+                                React.createElement(
+                                    "table",
+                                    null,
+                                    React.createElement(
+                                        "tbody",
+                                        null,
+                                        React.createElement(
+                                            "tr",
+                                            null,
+                                            React.createElement(
+                                                "th",
+                                                null,
+                                                "Public key"
+                                            ),
+                                            React.createElement(
+                                                "td",
+                                                { style: { textAlign: 'left' } },
+                                                React.createElement(
+                                                    "span",
+                                                    { style: { width: '30em' } },
+                                                    publicKey
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            ) : React.createElement("span", null),
+                            React.createElement(
+                                "p",
+                                null,
+                                "Please back up the private key displayed below in multiple safe locations before continuing.  You should make more than one copy and keep all copies in separate secure locations. If you use an external storage device such as a USB stick, make sure to safely eject the device before continuing."
+                            ),
+                            React.createElement(
+                                "table",
+                                null,
+                                React.createElement(
+                                    "tbody",
+                                    null,
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Description"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            "EOS Token Distribution Claim Key"
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Public key"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: 'left' } },
+                                            React.createElement("span", { id: "generate-pubkey", style: { width: "30em" } })
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            null,
+                                            "Private key"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            React.createElement("span", { id: "generate-privkey", style: { width: "30em" } })
+                                        )
+                                    ),
+                                    React.createElement(
+                                        "tr",
+                                        null,
+                                        React.createElement(
+                                            "th",
+                                            { style: { verticalAlign: "top" } },
+                                            "Confirm private key"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            { style: { textAlign: "left" } },
+                                            React.createElement("input", {
+                                                name: "wif", autoComplete: "off",
+                                                id: "generate-confirm-input", type: "text",
+                                                style: { width: "35em", fontFamily: "monospace" }
+                                            }),
+                                            React.createElement(
+                                                "p",
+                                                { id: "generate-unmatched", className: "hidden" },
+                                                React.createElement(
+                                                    "b",
+                                                    { style: { color: "red" } },
+                                                    "Private key does not match"
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            ),
+                            React.createElement(
+                                "p",
+                                null,
+                                "There is no way to recover your private key.  You must save it right now or you will be unable to access your EOS tokens when the sale ends."
+                            ),
+                            React.createElement(
+                                "button",
+                                { id: "generate-button" },
+                                "I have safely backed up my private key"
+                            ),
+                            React.createElement(
+                                "button",
+                                { onClick: generateCancel, style: { marginLeft: "1rem" } },
+                                "Cancel"
+                            )
+                        )
+                    ),
+                    React.createElement(
+                        "div",
+                        { className: "hidden pane", id: "register-pane" },
+                        React.createElement(
+                            "h3",
+                            null,
+                            publicKey ? "Change" : "Register",
+                            " EOS public key"
+                        ),
+                        React.createElement(
+                            "table",
+                            null,
+                            React.createElement(
+                                "tbody",
+                                null,
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Public key"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: 'left' } },
+                                        React.createElement(
+                                            "span",
+                                            { id: "generate-pubkey", style: { width: '30em' } },
+                                            "\xA0"
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        React.createElement(
+                            "span",
+                            { style: { marginLeft: "1rem" } },
+                            React.createElement(
+                                "span",
+                                { id: "register-progress", className: "hidden" },
+                                publicKey ? "Changing" : "Registering",
+                                " key..."
+                            )
+                        )
+                    ),
+                    React.createElement(
+                        "form",
+                        {
+                            className: "hidden pane", id: "buy-pane",
+                            onSubmit: function onSubmit(event) {
+                                return event.preventDefault(), buy();
+                            }
+                        },
+                        React.createElement(
+                            "h3",
+                            null,
+                            "Get EOS tokens"
+                        ),
+                        React.createElement(
+                            "table",
+                            null,
+                            React.createElement(
+                                "tbody",
+                                null,
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Distribution period"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        renderBuyWindowDropDown(buyWindow, today)
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Closing"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        days[buyWindow].ends.fromNow()
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "EOS Distributed"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        formatEOS(days[buyWindow].createOnDay),
+                                        " EOS"
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Total ETH"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        formatETH(days[buyWindow].dailyTotal),
+                                        " ETH"
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Your ETH"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        formatETH(days[buyWindow].userBuys),
+                                        " ETH"
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Effective price"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        days[buyWindow].price.toFormat(9),
+                                        " ETH/EOS"
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Send ETH"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        React.createElement("input", {
+                                            type: "text", required: true, id: "buy-input",
+                                            placeholder: formatETH(eth_balance.div(WAD))
+                                        }),
+                                        " ETH",
+                                        React.createElement(
+                                            "span",
+                                            { style: { marginLeft: "1.5rem" } },
+                                            React.createElement(
+                                                "button",
+                                                { id: "buy-button" },
+                                                "Send ETH"
+                                            ),
+                                            React.createElement(
+                                                "span",
+                                                { id: "buy-progress", className: "hidden" },
+                                                "Sending ETH..."
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    React.createElement(
+                        "form",
+                        {
+                            className: "hidden pane before-error", id: "transfer-pane",
+                            onSubmit: function onSubmit(event) {
+                                return event.preventDefault(), transfer();
+                            }
+                        },
+                        React.createElement(
+                            "h3",
+                            null,
+                            "Transfer EOS tokens to another Ethereum account"
+                        ),
+                        React.createElement(
+                            "table",
+                            null,
+                            React.createElement(
+                                "tbody",
+                                null,
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Recipient account"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        React.createElement("input", {
+                                            placeholder: "0x0123456789abcdef0123456789abcdef01234567",
+                                            id: "transfer-address-input", required: true,
+                                            type: "text",
+                                            minLength: 42, maxLength: 42,
+                                            style: { width: "100%" }
+                                        })
+                                    )
+                                ),
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Transfer amount"
+                                    ),
+                                    React.createElement(
+                                        "td",
+                                        { style: { textAlign: "left" } },
+                                        React.createElement("input", {
+                                            placeholder: formatEOS(eos_balance.div(WAD)),
+                                            id: "transfer-amount-input", required: true,
+                                            type: "text",
+                                            style: { width: "15em" }
+                                        }),
+                                        " EOS",
+                                        React.createElement(
+                                            "span",
+                                            { style: { marginLeft: "1rem" } },
+                                            React.createElement(
+                                                "button",
+                                                { id: "transfer-button" },
+                                                "Transfer EOS tokens"
+                                            ),
+                                            React.createElement(
+                                                "span",
+                                                { id: "transfer-progress", className: "hidden" },
+                                                "Transferring tokens..."
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    React.createElement(
+                        "div",
+                        { className: "sales pane" },
+                        React.createElement(
+                            "table",
+                            { style: { width: "100%" } },
+                            React.createElement(
+                                "thead",
+                                null,
+                                React.createElement(
+                                    "tr",
+                                    null,
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Period"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "EOS Distributed"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Total ETH"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Effective price"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Closing"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Your ETH"
+                                    ),
+                                    React.createElement(
+                                        "th",
+                                        null,
+                                        "Your EOS"
+                                    )
+                                )
+                            ),
+                            React.createElement(
+                                "tbody",
+                                null,
+                                days.map(function (day, i) {
+                                    return React.createElement(
+                                        "tr",
+                                        { key: i, className: i == Number(today) ? "active" : i < Number(today) ? "closed" : "" },
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            "#",
+                                            day.name,
+                                            i == Number(today) ? "" : ""
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            formatEOS(day.createOnDay),
+                                            " EOS"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            formatETH(day.dailyTotal),
+                                            " ETH"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            day.dailyTotal == 0 ? "n/a" : day.price.toFormat(9) + " ETH/EOS"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            day.ends.fromNow()
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            formatETH(day.userBuys),
+                                            " ETH"
+                                        ),
+                                        React.createElement(
+                                            "td",
+                                            null,
+                                            formatEOS(day.received),
+                                            " EOS",
+                                            i >= Number(today) && React.createElement(
+                                                "span",
+                                                { title: "Pending EOS subject to change if additional funds received", style: { cursor: "pointer" } },
+                                                " *"
+                                            )
+                                        )
+                                    );
+                                })
+                            )
+                        )
+                    )
+                ) : React.createElement(
+                    "div",
+                    { className: "pane before-error" },
+                    React.createElement(
+                        "h3",
+                        null,
+                        "Ethereum account not found"
+                    ),
+                    "It looks like an Ethereum client is available in your browser, but I couldn\u2019t find any accounts. If you\u2019re using MetaMask, you may need to unlock your account. You can also try disabling and re-enabling the MetaMask plugin by going to ",
+                    React.createElement(
+                        "a",
+                        {
+                            href: "chrome://extensions"
+                        },
+                        "chrome://extensions"
+                    ),
+                    "."
+                )
+            );
+        };
+
+        // When "Send ETH" has been clicked in the Buy EOS Panel
+        function buy() {
+            byId("buy-button").classList.add("hidden");
+            byId("buy-progress").classList.remove("hidden");
+            var amount = getValue("buy-input").replace(/,/g, "");
+            eos_sale.buyWithLimit(state.buyWindow, 0, {
+                value: web3.toWei(amount)
+            }, hopefully(function (result) {
+                return ping(result).then(function () {
+                    hidePanes();
+                    byId("buy-input").value = "";
+                    byId("buy-button").classList.remove("hidden");
+                    byId("buy-progress").classList.add("hidden");
+                });
+            }));
+        }
+
+        // When "Claim EOS Tokens" Button has been clicked in the Upper Panel
+        function claim() {
+            byId("claim-button").classList.add("hidden");
+            disable("claim-button");
+            byId("claim-progress").classList.remove("hidden");
+            eos_sale.claimAll({
+                gas: 2000000
+            }, hopefully(function (result) {
+                return ping(result).then(function () {
+                    byId("claim-button").classList.remove("hidden");
+                    byId("claim-progress").classList.add("hidden");
+                });
+            }));
+        }
+
+        // When "Transfer EOS Token" Button has been clicked in the Transfer EOS Panel
+        function transfer() {
+            byId("transfer-button").classList.add("hidden");
+            byId("transfer-progress").classList.remove("hidden");
+            var guy = getValue("transfer-address-input");
+            var wad = getValue("transfer-amount-input").replace(/,/g, "") * WAD;
+            eos_token.transfer(guy, wad, hopefully(function (result) {
+                return ping(result).then(function () {
+                    hidePanes();
+                    byId("transfer-button").classList.remove("hidden");
+                    byId("transfer-progress").classList.add("hidden");
+                });
+            }));
+        }
+
+        // USed for generating a key by recording mouse mousemovements for random numbers
+        function entropyEvent(e) {
+            var _eos_ecc = eos_ecc,
+                key_utils = _eos_ecc.key_utils;
+
+            if (e.type === 'mousemove') key_utils.addEntropy(e.pageX, e.pageY, e.screenX, e.screenY); else console.log('onEntropyEvent Unknown', e.type, e);
+        }
+
+        // When "Generate EOS KEY" in the top panel has been clicked
+        function generate() {
+            showPane('generate');
+            show("generate-progress");
+            hide("generate-confirm");
+            setTimeout(function () {
+                privateKeyPair = genKeyPair();
+                hide("generate-progress");
+                byId("generate-pubkey").innerHTML = privateKeyPair.pubkey;
+                byId("generate-privkey").innerHTML = privateKeyPair.privkey;
+                byId("generate-confirm-input").value = "";
+                show("generate-confirm");
+            });
+        }
+
+        var privateKeyPair = null;
+
+        // Helper function for generate() to actually generate public/private key pair
+        function genKeyPair() {
+            var _eos_ecc2 = eos_ecc,
+                PrivateKey = _eos_ecc2.PrivateKey;
+
+            var d = PrivateKey.randomKey();
+            var privkey = d.toWif();
+            var pubkey = d.toPublic().toString();
+            return { pubkey: pubkey, privkey: privkey };
+        }
+
+        // When "I have safely backed up my keys" in the Generate EOS Panel has been clicked
+        function generateConfirm() {
+            var confirmPriv = getValue("generate-confirm-input");
+            if (confirmPriv !== privateKeyPair.privkey) {
+                show("generate-unmatched");
+                return;
+            }
+            hide("generate-unmatched");
+            hide('generate-pane');
+            byId("generate-pubkey").innerHTML = null;
+            byId("generate-privkey").innerHTML = null;
+            byId("generate-confirm-input").value = null;
+            show('register-pane');
+            register();
+        }
+
+        // When "Cancel" in the Generate EOS Panel has been clicked
+        function generateCancel(e) {
+            e.preventDefault();
+            privateKeyPair = null;
+            hide('register-pane');
+            enable("generate-link");
+            hide('generate-pane');
+            hide("generate-unmatched");
+            byId("generate-pubkey").innerHTML = null;
+            byId("generate-privkey").innerHTML = null;
+            byId("generate-confirm-input").value = null;
+        }
+
+        // Makes the actual request when registering Key (Called from generateConfirm)
+        function register() {
+            var key = privateKeyPair.pubkey;
+            show("register-progress");
+            eos_sale.register(key, {
+                gas: 1000000
+            }, hopefully(function (result) {
+                return ping(result).then(function () {
+                    hidePanes();
+                    hide("register-progress");
+                });
+            }));
+        }
+
+        var lastPublicKey = void 0;
+
+        // Checks if the public key that has been registered for that account has been changed
+        function keyChange(pubkey) {
+            var changed = lastPublicKey != pubkey;
+            lastPublicKey = pubkey;
+            return changed;
+        }
+
+        // Called after every transaction
+        // Checks every second for a receipt
+        // Refreshes the page after receipt has arrived
+        function ping(tx) {
+            return new Promise(function (resolve, reject) {
+                function f() {
+                    web3.eth.getTransactionReceipt(tx, function (err, x) {
+                        return x ? refresh().then(function () {
+                            return resolve(x);
+                        }) : setTimeout(f, 1000);
+                    });
+                }
+                f();
+            });
+        }
+
+        var loaded;
+
+        // setTimeout(() => loaded || location.reload(), 20000)
+
+        // Refresh the data and rerender the page
+        function poll() {
+            refresh().then(function () {
+                return loaded = true, setTimeout(poll, 20000 * 60);
+            });
+        }
+
+        //Rerender the page
+        function update(x) {
+            state = Object.assign({}, state, x);
+            ReactDOM.render(render(state), byId("app"));
+        }
+  
+    </script>
+</head>
+<body>
+    <div>
+        <div id="app" class="before-error">
+         
+        </div>
+    </div>
+</body>
+</html>

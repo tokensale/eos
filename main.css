@@ -128,18 +128,15 @@ table {
 }
 @font-face {
   font-family: 'HelveticaNeue';
-  src: url('../fonts/HelveticaNeue.ttf');
-  src: url('../fonts/HelveticaNeue.otf');
+  src: url('HelveticaNeue.ttf');
 }
 @font-face {
   font-family: 'HelveticaNeueMedium';
-  src: url('../fonts/HelveticaNeueMedium.ttf');
-  src: url('../fonts/HelveticaNeueMedium.otf');
+  src: url('HelveticaNeueMedium.ttf');
 }
 @font-face {
   font-family: 'HelveticaNeueLight';
-  src: url('../fonts/HelveticaNeueLight.ttf');
-  src: url('../fonts/HelveticaNeueLight.otf');
+  src: url('HelveticaNeueLight.ttf');
 }
 * {
   -webkit-box-sizing: border-box;
